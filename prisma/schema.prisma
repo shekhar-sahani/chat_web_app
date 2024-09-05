@@ -1,0 +1,42 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               Int        @id @default(autoincrement())
+  username         String     @unique
+  password         String
+  socketID         String?
+  isOnline         Boolean    @default(false)
+  messagesSent     Message[]  @relation("SentMessages")
+  messagesReceived Message[]  @relation("ReceivedMessages")
+  contacts         Contacts[] @relation("UserContacts")
+  addedBy          Contacts[] @relation("AddedByContacts")
+}
+
+model Contacts {
+  id        Int @id @default(autoincrement())
+  userId    Int
+  contactId Int
+
+  user    User @relation("UserContacts", fields: [userId], references: [id])
+  contact User @relation("AddedByContacts", fields: [contactId], references: [id])
+
+  @@unique([userId, contactId])
+}
+
+model Message {
+  id         Int      @id @default(autoincrement())
+  content    String
+  createdAt  DateTime @default(now())
+  senderId   Int
+  receiverId Int
+
+  sender   User @relation("SentMessages", fields: [senderId], references: [id])
+  receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id])
+}
